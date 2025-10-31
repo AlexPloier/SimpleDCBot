@@ -7,3 +7,4 @@ A simple discord bot, which covers basic functionality. Such as welcome-msg, pol
 * Personal welcome-messages
 * Personal reocurring polls
 * Link to youtube, twitch, etc. for new uploades / highlights
+* Auto assign and manual assign roles
