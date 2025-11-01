@@ -4,7 +4,7 @@ A simple discord bot, which covers basic functionality. Such as welcome-msg, pol
 
 # To-Dos
 * Add an embedded msg which shows people wanting to group together
-* Personal welcome-messages
-* Personal reocurring polls
+* Personal welcome-messages, with saved entries even if bot shuts down for a while
+* Personal reocurring polls, with saved entries even if bot shuts down for a while
 * Link to youtube, twitch, etc. for new uploades / highlights
 * Auto assign and manual assign roles
