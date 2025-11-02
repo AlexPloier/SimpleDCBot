@@ -37,12 +37,20 @@ const client = new discord.Client({
 });
 
 // Space for constant links
+// All welcome messages are stored in the welcome_messages.json file
 const WELCOME_FILE = "./welcome_messages.json";
 
 // load saved messages
 let welcomeMessages = {};
-if(fs.existsSync(WELCOME_FILE)){
-    welcomeMessages = JSON.parse(fs.readFileSync(WELCOME_FILE,"utf-8"));
+if (fs.existsSync(WELCOME_FILE)) {
+  try {
+    const data = fs.readFileSync(WELCOME_FILE, 'utf8');
+    welcomeMessages = data ? JSON.parse(data) : {};
+  } catch (err) {
+    console.error('⚠️ Could not parse welcome_messages.json. Resetting file.', err);
+    welcomeMessages = {};
+    fs.writeFileSync(WELCOME_FILE, '{}');
+  }
 }
 
 //Ready event captures the state when the bot gets online
