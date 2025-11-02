@@ -1,6 +1,7 @@
 // requirements
 const discord = require("discord.js");
 const cron = require("node-cron");
+const fs = require("fs");
 
 // EmbedBuilder creates new Posts on its own
 // SlashCommandBuilder creates a new slash command
@@ -35,8 +36,14 @@ const client = new discord.Client({
     ]
 });
 
-// Space for saved variables per server
-const welcomeMessages = {};
+// Space for constant links
+const WELCOME_FILE = "./welcome_messages.json";
+
+// load saved messages
+let welcomeMessages = {};
+if(fs.existsSync(WELCOME_FILE)){
+    welcomeMessages = JSON.parse(fs.readFileSync(WELCOME_FILE,"utf-8"));
+}
 
 //Ready event captures the state when the bot gets online
 client.on("clientReady", (client) => {
@@ -104,30 +111,32 @@ client.on("messageCreate", async (message) => {
     if(command === "setwelcome"){
         // Check for Admin rights
         if(!message.member.permissions.has("Administrator")){
-            return message.reply("You do not have permission to do that.")
+            return message.reply("You do not have permission to do that.");
         }
 
         const newwelcomeMessage = args[0];
         if (!newwelcomeMessage){
-            return message.reply("Please add a welcome message for your server.")
+            return message.reply("Please add a welcome message for your server.");
         }
 
         welcomeMessages[message.guild.id] = newwelcomeMessage.trim();
-        return message.reply("New welcome message set to: **"+newwelcomeMessage+"**")
+        fs.writeFileSync(WELCOME_FILE, JSON.stringify(welcomeMessages, null, 2));
+        return message.reply("New welcome message set to: **"+newwelcomeMessage+"**");
     }
 
     // Delete welcome message
     // !deletewelcome
     if(command === "deletewelcome"){
         if(!message.member.permissions.has("Administrator")){
-            return message.reply("You do not have permission to do that.")
+            return message.reply("You do not have permission to do that.");
         }
 
         if(!welcomeMessages[message.guild.id]){
-            return message.reply("There is no welcome message set here.")
+            return message.reply("There is no welcome message set here.");
         }
-        delete welcomeMessages[message.guild.id]
-        message.reply("The welcome message for this server was deleted succesfully.")
+        delete welcomeMessages[message.guild.id];
+        fs.writeFileSync(WELCOME_FILE, JSON.stringify(welcomeMessages, null, 2));
+        message.reply("The welcome message for this server was deleted succesfully.");
     }
 });
 
