@@ -119,32 +119,117 @@ client.on("messageCreate", async (message) => {
     if(command === "setwelcome"){
         // Check for Admin rights
         if(!message.member.permissions.has("Administrator")){
-            return message.reply("You do not have permission to do that.");
+            return message.reply("❌You do not have permission to do that.");
         }
 
         const newwelcomeMessage = args[0];
         if (!newwelcomeMessage){
-            return message.reply("Please add a welcome message for your server.");
+            return message.reply("⚠️Please add a welcome message for your server.");
         }
 
         welcomeMessages[message.guild.id] = newwelcomeMessage.trim();
         fs.writeFileSync(WELCOME_FILE, JSON.stringify(welcomeMessages, null, 2));
-        return message.reply("New welcome message set to: **"+newwelcomeMessage+"**");
+        return message.reply("✅New welcome message set to: **"+newwelcomeMessage+"**");
     }
 
     // Delete welcome message
     // !deletewelcome
     if(command === "deletewelcome"){
         if(!message.member.permissions.has("Administrator")){
-            return message.reply("You do not have permission to do that.");
+            return message.reply("❌You do not have permission to do that.");
         }
 
         if(!welcomeMessages[message.guild.id]){
-            return message.reply("There is no welcome message set here.");
+            return message.reply("⚠️There is no welcome message set here.");
         }
         delete welcomeMessages[message.guild.id];
         fs.writeFileSync(WELCOME_FILE, JSON.stringify(welcomeMessages, null, 2));
-        message.reply("The welcome message for this server was deleted succesfully.");
+        message.reply("✅The welcome message for this server was deleted succesfully.");
+    }
+
+    // Roles command
+    // !role @user1 @user2 ; role1 ;role2
+    // Adds role1 and role2 to the user, or if user already has those it removes them.
+    if(command === "role"){
+        const argsRole = args[0].split(";");
+        const roleNames = argsRole.slice(1).map(r => r.trim());
+        const mentionedMembers = message.mentions.members;
+
+         // 🔒 Permission & hierarchy checks
+        const botMember = message.guild.members.me; // this is the bot
+        if (!botMember.permissions.has("ManageRoles")) {
+            return message.channel.send("❌I do not have permission to manage roles!");
+        }
+
+        // Verification
+        if (mentionedMembers.size === 0 || roleNames.length < 1){
+            return message.channel.send("❌Please do mention one or more users and at least one role to your command.");
+        }
+
+         // We'll store results for a summary
+        const summary = {
+            added: [],
+            removed: [],
+            failed: [],
+            skipped: []
+        };
+
+        // Loop through mentioned users
+        for (const [memberId, userRole] of mentionedMembers){
+            if(userRole.user.bot) continue;
+
+            for (const roleName of roleNames) {
+            const role = message.guild.roles.cache.find(r => r.name === roleName);
+            if (!role) {
+                summary.failed.push(`❌ Role **${roleName}** not found.`);
+                continue;
+            }
+
+            // Hierarchy check
+            if (role.position >= botMember.roles.highest.position) {
+                summary.failed.push(`⚠️ Cannot manage role **${roleName}** — it’s higher or equal to my highest role.`);
+                continue;
+            }
+
+            // Try add/remove
+            try {
+                if (userRole.roles.cache.has(role.id)) {
+                    await userRole.roles.remove(role);
+                    summary.removed.push(`Removed **${roleName}** from **${userRole.displayName}**`);
+                } else {
+                    await userRole.roles.add(role);
+                    summary.added.push(`Added **${roleName}** to **${userRole.displayName}**`);
+                }
+            } catch (err) {
+                console.error(err);
+                summary.failed.push(`⚠️ Failed to modify **${roleName}** for **${userRole.displayName}** (missing permission or hierarchy issue).`);
+            }
+        }
+    }
+
+    // 🧹 Remove duplicate lines
+    for (const key of Object.keys(summary)) {
+        summary[key] = [...new Set(summary[key])];
+    }
+
+    // 🧾 Build final summary message
+    let resultMessage = `**Role update summary:**\n`;
+
+    if (summary.added.length > 0)
+        resultMessage += `\n✅ **Added:**\n• ${summary.added.join("\n• ")}\n`;
+    if (summary.removed.length > 0)
+        resultMessage += `\n🧹 **Removed:**\n• ${summary.removed.join("\n• ")}\n`;
+    if (summary.failed.length > 0)
+        resultMessage += `\n⚠️ **Failed:**\n• ${summary.failed.join("\n• ")}\n`;
+    if (
+        summary.added.length === 0 &&
+        summary.removed.length === 0 &&
+        summary.failed.length === 0
+    )
+        resultMessage += `\nNothing changed.`
+
+    await message.channel.send(resultMessage);
+        
     }
 });
 
