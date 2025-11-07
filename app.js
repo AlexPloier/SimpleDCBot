@@ -40,7 +40,8 @@ const client = new discord.Client({
 // All welcome messages are stored in the welcome_messages.json file
 const WELCOME_FILE = "./welcome_messages.json";
 
-// load saved messages
+// load saved messages from json file
+// if it does not exist, an empty one is created
 let welcomeMessages = {};
 if (fs.existsSync(WELCOME_FILE)) {
   try {
@@ -231,15 +232,89 @@ client.on("messageCreate", async (message) => {
     await message.channel.send(resultMessage);
         
     }
+
+    // Userinfo command
+    // !userinfo @user1 @user2
+    // Returns basic information about the users
+    if(command === "userinfo"){
+        let member =
+            message.mentions.members.first() ||
+            message.member;
+
+        const roles = member.roles.cache
+            .filter((r) => r.id !== message.guild.id)
+            .map((r) => r.toString())
+            .join(', ') || 'Keine Rollen';
+        
+        const embed = new EmbedBuilder()
+            .setTitle(`Userinfo: ${member.user.tag}`)
+            .setColor(0xdcff73)
+            .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+            .addFields(
+            {
+              name: '📅 Beitritt Server',
+              value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:F>`,
+              inline: true,
+            },
+            { name: '🏷️ Rollen', value: roles, inline: false }
+            )
+            .setFooter({
+                text: `Abgefragt von ${message.author.tag}`,
+                iconURL: message.author.displayAvatarURL({ dynamic: true }),
+            })
+            .setTimestamp();
+    await message.channel.send({ embeds: [embed] });
+    }
+
+    // Serverinfo command
+    // !serverinfo
+     if (command === 'serverinfo') {
+    const { guild } = message;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`🏠 Serverinfo: ${guild.name}`)
+      .setColor(0x8ca0ff)
+      .setThumbnail(guild.iconURL({ dynamic: true, size: 1024 }))
+      .addFields(
+        { name: '🆔 Server ID', value: guild.id, inline: true },
+        {
+          name: '👑 Owner',
+          value: guild.ownerId
+            ? `<@${guild.ownerId}>`
+            : 'Unbekannt',
+          inline: true,
+        },
+        { name: '👥 Members', value: `${guild.memberCount}`, inline: true },
+        { name: '💬 Textchannels', value: `${guild.channels.cache.filter(c => c.type === 0).size}`, inline: true },
+        { name: '🔊 Voicechannels', value: `${guild.channels.cache.filter(c => c.type === 2).size}`, inline: true },
+        { name: '🎭 Roles', value: `${guild.roles.cache.size}`, inline: true },
+        { name: '📅 Created at', value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`, inline: false },
+        { name: 'Welcome Message is set to', value:`${welcomeMessages[message.guild.id]}`}
+      )
+      .setFooter({
+        text: `Abgefragt von ${message.author.tag}`,
+        iconURL: message.author.displayAvatarURL({ dynamic: true }),
+      })
+      .setTimestamp();
+
+    await message.channel.send({ embeds: [embed] });
+  }
 });
 
 // Events - The discord bot shall react to these events
+// A new person joins a server
 client.on("guildMemberAdd", async (member) => {
   const welcomeMsg = welcomeMessages[member.guild.id];
   if (!welcomeMsg) return; // do nothing if not welcomeMessage was set
 
   // mention the user with @
-  const personalizedMsg = welcomeMsg.replace("{user}", `<@${member.id}>`);
+  const personalizedMsg = welcomeMsg.replace("{user}", `${member.displayName}`);
+
+  const embed = new EmbedBuilder()
+  .setTitle(`${personalizedMsg}`)
+  .setColor(0x8ca0ff)
+  .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+  .setTimestamp();
 
   // Send in the first channel with writing rights.
   const channel = member.guild.channels.cache
@@ -247,7 +322,7 @@ client.on("guildMemberAdd", async (member) => {
     .first();
 
   if (channel) {
-    channel.send(personalizedMsg);
+    await channel.send({ embeds : [embed] });
   }
 });
 
