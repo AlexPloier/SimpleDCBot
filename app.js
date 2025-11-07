@@ -80,8 +80,37 @@ client.on("messageCreate", async (message) => {
     const command = args.shift().toLowerCase();
 
     // Help command
-    if(command === "help"){
-        message.reply("This bot has the following commands: \n!help \n!poll A question with a maximum of 10 answers called via \"!poll Question;Answer1;Answer2;...;Answer10\"")
+    if (command === "help") {
+    const helpMessage = `
+**🤖 Available Commands:**
+
+**!help**  
+Shows this help message.
+
+**!poll Question;Answer1;Answer2;...;Answer10**  
+Creates a poll with up to 10 possible answers.  
+➡️ Example: \`!poll What's your favorite color?;Red;Blue;Green\`
+
+**!setwelcome Your welcome message**  
+Sets a custom welcome message for this server. *(Admin only)*  
+➡️ Example: \`!setwelcome Welcome to our server, {user}!\`
+
+**!deletewelcome**  
+Deletes the currently set welcome message. *(Admin only)*
+
+**!role @user1 @user2 ; role1 ; role2**  
+Adds or removes the specified roles for the mentioned users.  
+➡️ Example: \`!role @Alice @Bob ; Gamer ; Streamer\`
+
+**!userinfo @user**  
+Displays information about a mentioned user (or yourself if no one is mentioned).  
+➡️ Example: \`!userinfo @Alice\`
+
+**!serverinfo**  
+Displays detailed information about the server, such as member count, roles, and welcome message status.
+`;
+
+    message.reply(helpMessage);
     }
 
     // Poll command
