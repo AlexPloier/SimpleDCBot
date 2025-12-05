@@ -81,36 +81,55 @@ client.on("messageCreate", async (message) => {
 
     // Help command
     if (command === "help") {
-    const helpMessage = `
-**🤖 Available Commands:**
+   const helpEmbed = new EmbedBuilder()
+        .setTitle("🤖 Bot Command List")
+        .setColor(0xdcff73)
+        .setThumbnail(message.client.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+        .setDescription("Here’s a list of all available commands and how to use them:")
+        .addFields(
+            {
+                name: "📖 !help",
+                value: "Shows this help message.",
+                inline: false
+            },
+            {
+                name: "🗳️ !poll Question;Answer1;Answer2;...;Answer10",
+                value: "Creates a poll with up to **10** answers.\nExample: `!poll What's your favorite color?;Red;Blue;Green`",
+                inline: false
+            },
+            {
+                name: "👋 !setwelcome Your welcome message",
+                value: "Sets a **custom welcome message** for this server. *(Admin only)*\nExample: `!setwelcome Welcome to our server, {user}!`",
+                inline: false
+            },
+            {
+                name: "❌ !deletewelcome",
+                value: "Deletes the currently set welcome message. *(Admin only)*",
+                inline: false
+            },
+            {
+                name: "🎭 !role @user1 @user2 ; role1 ; role2",
+                value: "Adds or removes specified roles for mentioned users.\nExample: `!role @Alice @Bob ; Gamer ; Streamer`",
+                inline: false
+            },
+            {
+                name: "👤 !userinfo @user",
+                value: "Displays information about a mentioned user (or yourself if no one is mentioned).\nExample: `!userinfo @Alice`",
+                inline: false
+            },
+            {
+                name: "🏠 !serverinfo",
+                value: "Shows detailed server information (members, roles, channels, welcome message).",
+                inline: false
+            }
+        )
+        .setFooter({
+            text: `Requested by ${message.author.tag}`,
+            iconURL: message.author.displayAvatarURL({ dynamic: true }),
+        })
+        .setTimestamp();
 
-**!help**  
-Shows this help message.
-
-**!poll Question;Answer1;Answer2;...;Answer10**  
-Creates a poll with up to 10 possible answers.  
-➡️ Example: \`!poll What's your favorite color?;Red;Blue;Green\`
-
-**!setwelcome Your welcome message**  
-Sets a custom welcome message for this server. *(Admin only)*  
-➡️ Example: \`!setwelcome Welcome to our server, {user}!\`
-
-**!deletewelcome**  
-Deletes the currently set welcome message. *(Admin only)*
-
-**!role @user1 @user2 ; role1 ; role2**  
-Adds or removes the specified roles for the mentioned users.  
-➡️ Example: \`!role @Alice @Bob ; Gamer ; Streamer\`
-
-**!userinfo @user**  
-Displays information about a mentioned user (or yourself if no one is mentioned).  
-➡️ Example: \`!userinfo @Alice\`
-
-**!serverinfo**  
-Displays detailed information about the server, such as member count, roles, and welcome message status.
-`;
-
-    message.reply(helpMessage);
+    await message.channel.send({ embeds: [helpEmbed] });
     }
 
     // Poll command
